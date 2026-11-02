@@ -1,0 +1,71 @@
+name: Swift package
+
+# Reusable CI for Swift packages: SwiftLint, `swift test` on macOS, and an optional iOS Simulator build.
+# Callers own their triggers, concurrency and branch rules; this file owns how the checks run.
+
+on:
+  workflow_call:
+    inputs:
+      scheme:
+        description: Scheme to build for the iOS Simulator, usually the library product name. Empty skips the build.
+        type: string
+        default: ""
+      xcode-version:
+        description: Xcode to select, in any form maxim-lobanov/setup-xcode accepts.
+        type: string
+        default: "26.x"
+      swiftlint-version:
+        description: Tag of ghcr.io/realm/swiftlint. Keep in step with local installs.
+        type: string
+        default: "0.65.1"
+      lint:
+        description: Run SwiftLint.
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    if: inputs.lint
+    name: SwiftLint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container: ghcr.io/realm/swiftlint:${{ inputs.swiftlint-version }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: SwiftLint version
+        run: swiftlint version
+      - name: SwiftLint --strict
+        run: swiftlint lint --strict --reporter github-actions-logging
+
+  test:
+    # One job rather than two: the iOS build reuses the checkout and Xcode selection, saving a macOS runner.
+    name: swift test (macOS) + iOS build
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ inputs.xcode-version }}
+
+      - name: Toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Test (macOS)
+        run: swift test --parallel
+
+      - name: Build (iOS Simulator)
+        if: inputs.scheme != ''
+        env:
+          SCHEME: ${{ inputs.scheme }}
+        run: |
+          xcodebuild build \
+            -scheme "$SCHEME" \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO

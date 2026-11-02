@@ -1,0 +1,14 @@
+# Shared SwiftLint rules for Haelix Swift packages.
+#
+# Inherit from a repo's .swiftlint.yml with:
+#   parent_config: https://raw.githubusercontent.com/Haelix-Code/swift-ci/v1/swiftlint/base.yml
+# then add only that repo's exceptions below it. A rule configured in the repo replaces the one here.
+
+excluded:
+  - .build
+  - .swiftpm
+
+# Our packages are numerical ports that keep the notation of their sources (Vincenty's a, b, f, σ, λ;
+# the WMM report's n, m, g, h), so short identifiers are expected rather than suspicious.
+identifier_name:
+  min_length: 1
