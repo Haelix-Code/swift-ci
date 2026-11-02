@@ -1,6 +1,6 @@
-# swift-ci
+# Swift CI
 
-Continuous Integration tools for Swift repos: one reusable GitHub Actions workflow and one base SwiftLint config, shared by the Haelix Swift packages. A fix here reaches every repo that uses it.
+Continuous Integration tools for Swift repos: one reusable GitHub Actions workflow and one base SwiftLint config, shared by the Haelix Swift packages.
 
 ## Using it in a package
 
