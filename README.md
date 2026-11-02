@@ -11,8 +11,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main]        # [develop, main] if the repo uses develop
   pull_request:
+    branches: [main]        # PRs into these branches only
   workflow_dispatch:
 
 permissions:
@@ -48,7 +49,7 @@ Don't put a `paths:` filter on the caller's `pull_request` trigger: a required c
 ## Inputs
 
 | Input | Default | |
-|---|---|---|
+| --- | --- | --- |
 | `scheme` | `""` | Scheme to build for the iOS Simulator. Empty skips the build. |
 | `xcode-version` | `26.x` | Any version `maxim-lobanov/setup-xcode` accepts. |
 | `swiftlint-version` | `0.65.1` | Tag of `ghcr.io/realm/swiftlint`. Keep in step with local installs. |
@@ -65,12 +66,15 @@ GitHub names called jobs `<caller job> / <job>`, so with the caller above the ch
 
 Callers pin `@v1`, which applies to both the workflow and the SwiftLint config URL.
 
-- **Non-breaking change** (fix, SwiftLint bump, new optional input): commit, then move the tag so every repo picks it up on its next run.
+Each release gets a fixed `x.y.z` tag; `v1` is moved to the newest 1.x release.
+
+- **Non-breaking change** (fix, SwiftLint bump, Dependabot update, new optional input): merge, tag the release, then move `v1` to it so every repo picks it up on its next run.
 
   ```sh
-  git tag -f v1 && git push -f origin v1
+  git tag 1.0.1 && git push origin 1.0.1
+  git tag -f v1 '1.0.1^{}' && git push -f origin v1
   ```
 
-- **Breaking change** (new rule that fails existing code, renamed input or check): tag `v2` and move repos across one at a time.
+- **Breaking change** (new rule that fails existing code, renamed input or check): release `2.0.0`, tag `v2`, and move repos across one at a time. Leave `v1` where it is.
 
 This repo must stay **public**: public repos can't call workflows stored in a private repo, and SwiftLint fetches the base config without credentials.
